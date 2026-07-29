@@ -13,27 +13,28 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
     .wrap{max-width:1800px;margin:0 auto;padding:20px}
-    .top{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px}
+    .top{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
     .k{font-size:12px;color:var(--muted)} .v{font-size:26px;font-weight:700}
 
-    .layout{display:grid;grid-template-columns:minmax(780px,1.3fr) minmax(520px,1fr);gap:12px;margin-top:12px;align-items:start}
-    @media (max-width:1380px){.layout{grid-template-columns:1fr}}
+    .layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.9fr);gap:12px;margin-top:12px;align-items:start}
+    @media (max-width:1280px){.layout{grid-template-columns:1fr}}
 
     .title{margin:0 0 8px;font-size:18px}
     .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
     .p0t{color:var(--p0);font-weight:700}.p1t{color:var(--p1);font-weight:700}.p2t{color:var(--p2);font-weight:700}.p3t{color:var(--p3);font-weight:700}
 
-    .timeline{position:relative;border:1px solid var(--line);border-radius:12px;padding:40px 10px 14px;overflow:hidden}
-    .axis{position:absolute;left:10px;right:10px;top:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+    .timeline{--timeline-name:clamp(96px,18vw,164px);--timeline-tag:56px;--timeline-gap:10px;position:relative;border:1px solid var(--line);border-radius:12px;padding:40px 10px 14px;overflow:hidden}
+    .axis{position:absolute;left:calc(10px + var(--timeline-name) + var(--timeline-gap));right:calc(10px + var(--timeline-tag) + var(--timeline-gap));top:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
     .axis div{text-align:center;font-size:12px;color:var(--muted);padding-top:4px}
     .axis div+div{border-left:1px dashed #e8ebf2}
     .rows{display:flex;flex-direction:column;gap:10px;margin-top:2px}
-    .row{position:relative;height:34px;background:#f9fbff;border:1px solid #edf1f8;border-radius:10px;padding:8px 10px 8px 124px}
-    .task-name{position:absolute;left:10px;top:7px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}
-    .bar{position:absolute;top:13px;height:8px;border-radius:999px;opacity:.98;box-shadow:0 1px 2px rgba(0,0,0,.14)}
+    .row{display:grid;grid-template-columns:minmax(84px,var(--timeline-name)) minmax(0,1fr) var(--timeline-tag);align-items:center;gap:var(--timeline-gap);min-height:40px;background:#f9fbff;border:1px solid #edf1f8;border-radius:10px;padding:8px 10px}
+    .task-name{min-width:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .track{position:relative;height:12px;min-width:0}
+    .bar{position:absolute;top:2px;height:8px;border-radius:999px;opacity:.98;box-shadow:0 1px 2px rgba(0,0,0,.14)}
     .bar.p0{background:var(--p0)} .bar.p1{background:var(--p1)} .bar.p2{background:var(--p2)} .bar.p3{background:var(--p3)}
-    .tag{position:absolute;right:10px;top:7px;font-size:11px;font-weight:700}
+    .tag{font-size:11px;font-weight:700;text-align:right;white-space:nowrap}
 
     .kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
     .col{border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafbff;min-height:170px}
@@ -42,7 +43,7 @@
     .item.p0{border-left-color:var(--p0)} .item.p1{border-left-color:var(--p1)} .item.p2{border-left-color:var(--p2)} .item.p3{border-left-color:var(--p3)}
 
     .ops{margin-top:12px}
-    .new{display:grid;grid-template-columns:2fr repeat(4,1fr) auto auto;gap:8px}
+    .new{display:grid;grid-template-columns:minmax(180px,2fr) repeat(4,minmax(0,1fr)) auto auto;gap:8px}
     .new input,.new select,.btn{height:34px;border-radius:8px;border:1px solid #d9dfec;background:#fff;padding:0 10px}
     .btn{cursor:pointer;font-weight:600}
     .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
@@ -53,8 +54,21 @@
     td .s,td .d,td .p{height:30px;border:1px solid #dbe3f0;border-radius:7px;background:#fff;padding:0 6px}
 
     .depwrap{margin-top:12px}
-    .dep{width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .dep{display:block;width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#fff}
     .note{font-size:12px;color:var(--muted);margin-top:6px}
+    @media (max-width:960px){
+      .new{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .new > *{min-width:0}
+      .btn{width:100%}
+    }
+    @media (max-width:640px){
+      .wrap{padding:14px}
+      .timeline{--timeline-name:88px;--timeline-tag:46px;--timeline-gap:8px;padding:40px 8px 12px}
+      .axis{left:calc(8px + var(--timeline-name) + var(--timeline-gap));right:calc(8px + var(--timeline-tag) + var(--timeline-gap))}
+      .axis div{font-size:11px}
+      .row{padding:8px}
+      .task-name{font-size:12px}
+    }
   </style>
 </head>
 <body>
@@ -139,6 +153,9 @@ const defaultTasks=[
 const deps=[['t1','t2'],['t2','t3'],['t3','t4'],['t4','t5'],['t5','t6'],['t6','t7']];
 
 const $=s=>document.querySelector(s);
+function escapeHtml(value){
+ return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 function norm(t){
  const day=Math.min(7,Math.max(1,Number(t.day)||1));
  const duration=Math.min(7,Math.max(1,Number(t.duration)||1));
@@ -167,13 +184,13 @@ function renderTimeline(){
    let width=(t.duration*cell)-1.6;
    if(t.duration===1) width=Math.max(width,18);
    const pri=`<span class="${t.priority==='P0'?'p0t':t.priority==='P1'?'p1t':t.priority==='P2'?'p2t':'p3t'}">${t.priority}</span>`;
-   return `<div class="row"><span class="task-name">${t.name}</span><div class="bar ${colorClass(t.priority)}" style="left:${left}%;width:${width}%;"></div><span class="tag">${pri}</span></div>`;
+   return `<div class="row"><span class="task-name">${escapeHtml(t.name)}</span><div class="track"><div class="bar ${colorClass(t.priority)}" style="left:${left}%;width:${width}%;"></div></div><span class="tag">${pri}</span></div>`;
  }).join('');
 }
 
 function badge(t){
  const st=t.status==='pending'?'待开始':t.status==='in_progress'?'进行中':'已完成';
- return `<div class="item ${colorClass(t.priority)}"><div style="font-weight:700">${t.name}</div><div style="margin-top:4px;color:#6b7280">${t.priority} · Day${t.day} · ${t.duration}天 · ${st}</div></div>`;
+ return `<div class="item ${colorClass(t.priority)}"><div style="font-weight:700">${escapeHtml(t.name)}</div><div style="margin-top:4px;color:#6b7280">${t.priority} · Day${t.day} · ${t.duration}天 · ${st}</div></div>`;
 }
 function renderKanban(){
  $('#kb-pending').innerHTML=tasks.filter(t=>t.status==='pending').map(badge).join('');
@@ -183,7 +200,7 @@ function renderKanban(){
 
 function renderTable(){
  $('#tb').innerHTML=tasks.map(t=>`<tr>
-  <td>${t.name}</td>
+ <td>${escapeHtml(t.name)}</td>
   <td><select class="s" data-id="${t.id}" data-f="status"><option value="pending" ${t.status==='pending'?'selected':''}>待开始</option><option value="in_progress" ${t.status==='in_progress'?'selected':''}>进行中</option><option value="done" ${t.status==='done'?'selected':''}>已完成</option></select></td>
   <td><select class="d" data-id="${t.id}" data-f="day">${D.map(d=>`<option value="${d}" ${t.day===d?'selected':''}>Day ${d}</option>`).join('')}</select></td>
   <td><select class="d" data-id="${t.id}" data-f="duration">${D.map(d=>`<option value="${d}" ${t.duration===d?'selected':''}>${d}天</option>`).join('')}</select></td>
@@ -194,8 +211,14 @@ function renderTable(){
 
 function renderDep(){
  const svg=$('#dep');
- const w=svg.clientWidth,h=svg.clientHeight;
+ const rect=svg.getBoundingClientRect();
+ const w=Math.max(320,Math.round(rect.width||svg.clientWidth||0));
+ const h=Math.max(260,Math.round(rect.height||svg.clientHeight||0));
+ const nodeW=Math.max(96,Math.min(128,Math.floor(w/7)-18));
+ const half=nodeW/2;
+ if(!w||!h) return;
  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+ svg.setAttribute('preserveAspectRatio','xMidYMid meet');
  const grouped=D.map(day=>tasks.filter(t=>t.day===day));
  const pos={};
  let out='';
@@ -208,20 +231,26 @@ function renderDep(){
      const y=46+ri*52;
      pos[t.id]={x,y};
      const c=t.priority==='P0'?'#ef4444':t.priority==='P1'?'#f59e0b':t.priority==='P2'?'#3b82f6':'#10b981';
-     out+=`<rect x="${x-64}" y="${y-18}" rx="10" ry="10" width="128" height="34" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
-     out+=`<text x="${x}" y="${y+3}" text-anchor="middle" fill="#1f2937" font-size="12">${t.name.slice(0,10)}</text>`;
+     out+=`<rect x="${x-half}" y="${y-18}" rx="10" ry="10" width="${nodeW}" height="34" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+     out+=`<text x="${x}" y="${y+3}" text-anchor="middle" fill="#1f2937" font-size="12">${escapeHtml(t.name.slice(0,10))}</text>`;
    });
  });
  deps.forEach(([a,b])=>{
    if(!pos[a]||!pos[b]) return;
    const p1=pos[a],p2=pos[b];
    const dx=(p2.x-p1.x)*0.42;
-   out+=`<path d="M ${p1.x+64} ${p1.y} C ${p1.x+64+dx} ${p1.y}, ${p2.x-64-dx} ${p2.y}, ${p2.x-64} ${p2.y}" stroke="#64748b" stroke-width="3.4" fill="none" marker-end="url(#arr)"/>`;
+   out+=`<path d="M ${p1.x+half} ${p1.y} C ${p1.x+half+dx} ${p1.y}, ${p2.x-half-dx} ${p2.y}, ${p2.x-half} ${p2.y}" stroke="#64748b" stroke-width="3.4" fill="none" marker-end="url(#arr)"/>`;
  });
  svg.innerHTML=out;
 }
 
-function renderAll(){renderKpi();renderTimeline();renderKanban();renderTable();renderDep();}
+let depRenderFrame=0;
+function scheduleDepRender(){
+ cancelAnimationFrame(depRenderFrame);
+ depRenderFrame=requestAnimationFrame(renderDep);
+}
+
+function renderAll(){renderKpi();renderTimeline();renderKanban();renderTable();scheduleDepRender();}
 
 function bind(){
  const daySel=$('#n-day'),durSel=$('#n-duration');
@@ -251,7 +280,12 @@ function bind(){
  });
 
  $('#btn-reset').addEventListener('click',()=>{tasks=defaultTasks.map(norm);save();renderAll();});
- window.addEventListener('resize',renderDep);
+ if('ResizeObserver' in window){
+   const depObserver=new ResizeObserver(()=>scheduleDepRender());
+   depObserver.observe($('#dep'));
+ }else{
+   window.addEventListener('resize',scheduleDepRender);
+ }
 }
 
 bind();renderAll();
