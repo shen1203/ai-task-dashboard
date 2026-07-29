@@ -24,13 +24,15 @@
     .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
     .p0t{color:var(--p0);font-weight:700}.p1t{color:var(--p1);font-weight:700}.p2t{color:var(--p2);font-weight:700}.p3t{color:var(--p3);font-weight:700}
 
-    .timeline{position:relative;border:1px solid var(--line);border-radius:12px;padding:40px 10px 14px;overflow:hidden}
-    .axis{position:absolute;left:10px;right:10px;top:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+    .timeline-scroll{overflow-x:auto}
+    .timeline{--name-col:124px;--tag-col:58px;position:relative;min-width:760px;border:1px solid var(--line);border-radius:12px;padding:40px 10px 14px;overflow:hidden}
+    .axis{position:absolute;left:calc(10px + var(--name-col));right:calc(10px + var(--tag-col));top:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
     .axis div{text-align:center;font-size:12px;color:var(--muted);padding-top:4px}
     .axis div+div{border-left:1px dashed #e8ebf2}
     .rows{display:flex;flex-direction:column;gap:10px;margin-top:2px}
-    .row{position:relative;height:34px;background:#f9fbff;border:1px solid #edf1f8;border-radius:10px;padding:8px 10px 8px 124px}
+    .row{position:relative;height:34px;background:#f9fbff;border:1px solid #edf1f8;border-radius:10px;padding:8px var(--tag-col) 8px var(--name-col)}
     .task-name{position:absolute;left:10px;top:7px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}
+    .track{position:absolute;left:var(--name-col);right:var(--tag-col);top:0;bottom:0}
     .bar{position:absolute;top:13px;height:8px;border-radius:999px;opacity:.98;box-shadow:0 1px 2px rgba(0,0,0,.14)}
     .bar.p0{background:var(--p0)} .bar.p1{background:var(--p1)} .bar.p2{background:var(--p2)} .bar.p3{background:var(--p3)}
     .tag{position:absolute;right:10px;top:7px;font-size:11px;font-weight:700}
@@ -42,9 +44,9 @@
     .item.p0{border-left-color:var(--p0)} .item.p1{border-left-color:var(--p1)} .item.p2{border-left-color:var(--p2)} .item.p3{border-left-color:var(--p3)}
 
     .ops{margin-top:12px}
-    .new{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+    .new{display:grid;grid-template-columns:minmax(160px,2fr) repeat(4,minmax(92px,1fr)) minmax(104px,auto) minmax(104px,auto);gap:8px}
     .new #n-name{grid-column:span 2}
-    .new #btn-add,.new #btn-reset{min-width:0}
+    .new #btn-add,.new #btn-reset{min-width:104px;white-space:nowrap}
     .new input,.new select,.btn{height:34px;border-radius:8px;border:1px solid #d9dfec;background:#fff;padding:0 10px}
     .btn{cursor:pointer;font-weight:600}
     .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
@@ -65,7 +67,8 @@
     td .s,td .d,td .p{height:30px;border:1px solid #dbe3f0;border-radius:7px;background:#fff;padding:0 6px}
 
     .depwrap{margin-top:12px}
-    .dep{width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .dep-scroll{overflow-x:auto}
+    .dep{display:block;min-width:860px;width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#fff}
     .note{font-size:12px;color:var(--muted);margin-top:6px}
   </style>
 </head>
@@ -88,15 +91,17 @@
             <span><span class="p2t">P2</span> 中优</span>
             <span><span class="p3t">P3</span> 低优</span>
           </div>
-          <div class="timeline" id="timeline">
-            <div class="axis" id="axis"></div>
-            <div class="rows" id="rows"></div>
+          <div class="timeline-scroll">
+            <div class="timeline" id="timeline">
+              <div class="axis" id="axis"></div>
+              <div class="rows" id="rows"></div>
+            </div>
           </div>
         </div>
 
         <div class="card depwrap">
           <h3 class="title">任务依赖关系</h3>
-          <svg class="dep" id="dep"></svg>
+          <div class="dep-scroll"><svg class="dep" id="dep"></svg></div>
           <div class="note">说明：耗时>=2天使用连续粗线；依赖箭头按时间顺序连接。</div>
         </div>
       </div>
@@ -179,7 +184,7 @@ function renderTimeline(){
    let width=(t.duration*cell)-1.6;
    if(t.duration===1) width=Math.max(width,18);
    const pri=`<span class="${t.priority==='P0'?'p0t':t.priority==='P1'?'p1t':t.priority==='P2'?'p2t':'p3t'}">${t.priority}</span>`;
-   return `<div class="row"><span class="task-name">${t.name}</span><div class="bar ${colorClass(t.priority)}" style="left:${left}%;width:${width}%;"></div><span class="tag">${pri}</span></div>`;
+   return `<div class="row"><span class="task-name">${t.name}</span><div class="track"><div class="bar ${colorClass(t.priority)}" style="left:${left}%;width:${width}%;"></div></div><span class="tag">${pri}</span></div>`;
  }).join('');
 }
 
