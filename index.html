@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>任务排期看板</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#e5e7eb;
+      --p0:#ef4444;--p1:#f59e0b;--p2:#3b82f6;--p3:#10b981;
+      --pending:#9ca3af;--inprogress:#2563eb;--done:#16a34a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1800px;margin:0 auto;padding:20px}
+    .top{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .k{font-size:12px;color:var(--muted)} .v{font-size:26px;font-weight:700}
+
+    .layout{display:grid;grid-template-columns:minmax(780px,1.3fr) minmax(520px,1fr);gap:12px;margin-top:12px;align-items:start}
+    @media (max-width:1380px){.layout{grid-template-columns:1fr}}
+
+    .title{margin:0 0 8px;font-size:18px}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+    .p0t{color:var(--p0);font-weight:700}.p1t{color:var(--p1);font-weight:700}.p2t{color:var(--p2);font-weight:700}.p3t{color:var(--p3);font-weight:700}
+
+    .timeline{position:relative;border:1px solid var(--line);border-radius:12px;padding:40px 10px 14px;overflow:hidden}
+    .axis{position:absolute;left:10px;right:10px;top:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+    .axis div{text-align:center;font-size:12px;color:var(--muted);padding-top:4px}
+    .axis div+div{border-left:1px dashed #e8ebf2}
+    .rows{display:flex;flex-direction:column;gap:10px;margin-top:2px}
+    .row{position:relative;height:34px;background:#f9fbff;border:1px solid #edf1f8;border-radius:10px;padding:8px 10px 8px 124px}
+    .task-name{position:absolute;left:10px;top:7px;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}
+    .bar{position:absolute;top:13px;height:8px;border-radius:999px;opacity:.98;box-shadow:0 1px 2px rgba(0,0,0,.14)}
+    .bar.p0{background:var(--p0)} .bar.p1{background:var(--p1)} .bar.p2{background:var(--p2)} .bar.p3{background:var(--p3)}
+    .tag{position:absolute;right:10px;top:7px;font-size:11px;font-weight:700}
+
+    .kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+    .col{border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafbff;min-height:170px}
+    .col h4{margin:0 0 8px;font-size:13px}
+    .item{background:#fff;border:1px solid #e9edf7;border-left-width:5px;border-radius:8px;padding:8px;margin-bottom:8px;font-size:12px}
+    .item.p0{border-left-color:var(--p0)} .item.p1{border-left-color:var(--p1)} .item.p2{border-left-color:var(--p2)} .item.p3{border-left-color:var(--p3)}
+
+    .ops{margin-top:12px}
+    .new{display:grid;grid-template-columns:2fr repeat(4,1fr) auto auto;gap:8px}
+    .new input,.new select,.btn{height:34px;border-radius:8px;border:1px solid #d9dfec;background:#fff;padding:0 10px}
+    .btn{cursor:pointer;font-weight:600}
+    .btn.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+    .btn.warn{background:#dc2626;color:#fff;border-color:#dc2626}
+
+    table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+    th,td{border-bottom:1px solid #eef1f6;padding:7px;text-align:left}
+    td .s,td .d,td .p{height:30px;border:1px solid #dbe3f0;border-radius:7px;background:#fff;padding:0 6px}
+
+    .depwrap{margin-top:12px}
+    .dep{width:100%;height:340px;border:1px solid var(--line);border-radius:12px;background:#fff}
+    .note{font-size:12px;color:var(--muted);margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="card"><div class="k">总任务</div><div class="v" id="k-total">0</div></div>
+      <div class="card"><div class="k">待开始</div><div class="v" id="k-pending">0</div></div>
+      <div class="card"><div class="k">进行中</div><div class="v" id="k-progress">0</div></div>
+      <div class="card"><div class="k">已完成</div><div class="v" id="k-done">0</div></div>
+    </div>
+
+    <div class="layout">
+      <div>
+        <div class="card">
+          <h3 class="title">7天排期时间轴</h3>
+          <div class="legend">
+            <span><span class="p0t">P0</span> 紧急</span>
+            <span><span class="p1t">P1</span> 高优</span>
+            <span><span class="p2t">P2</span> 中优</span>
+            <span><span class="p3t">P3</span> 低优</span>
+          </div>
+          <div class="timeline" id="timeline">
+            <div class="axis" id="axis"></div>
+            <div class="rows" id="rows"></div>
+          </div>
+        </div>
+
+        <div class="card depwrap">
+          <h3 class="title">任务依赖关系</h3>
+          <svg class="dep" id="dep"></svg>
+          <div class="note">说明：耗时>=2天使用连续粗线；依赖箭头按时间顺序连接。</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3 class="title">状态看板</h3>
+          <div class="kanban">
+            <div class="col"><h4>待开始</h4><div id="kb-pending"></div></div>
+            <div class="col"><h4>进行中</h4><div id="kb-progress"></div></div>
+            <div class="col"><h4>已完成</h4><div id="kb-done"></div></div>
+          </div>
+        </div>
+
+        <div class="card ops">
+          <h3 class="title">任务增删与编辑</h3>
+          <div class="new">
+            <input id="n-name" placeholder="任务名称" />
+            <select id="n-day"></select>
+            <select id="n-duration"></select>
+            <select id="n-priority">
+              <option value="P0">P0</option><option value="P1" selected>P1</option><option value="P2">P2</option><option value="P3">P3</option>
+            </select>
+            <select id="n-status">
+              <option value="pending" selected>待开始</option><option value="in_progress">进行中</option><option value="done">已完成</option>
+            </select>
+            <button class="btn primary" id="btn-add">新增任务</button>
+            <button class="btn" id="btn-reset">重置默认</button>
+          </div>
+
+          <table>
+            <thead><tr><th>任务</th><th>状态</th><th>Day</th><th>耗时</th><th>分级</th><th>操作</th></tr></thead>
+            <tbody id="tb"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const KEY='ai-dashboard-tasks-v1';
+const D=[1,2,3,4,5,6,7];
+const defaultTasks=[
+ {id:'t1',name:'需求确认与拆分',day:1,duration:1,priority:'P0',status:'done'},
+ {id:'t2',name:'核心页面框架',day:1,duration:2,priority:'P1',status:'done'},
+ {id:'t3',name:'时间轴交互完善',day:2,duration:2,priority:'P1',status:'in_progress'},
+ {id:'t4',name:'状态看板联动',day:3,duration:1,priority:'P1',status:'in_progress'},
+ {id:'t5',name:'依赖可视化优化',day:4,duration:2,priority:'P2',status:'pending'},
+ {id:'t6',name:'全屏与125%适配',day:5,duration:2,priority:'P0',status:'pending'},
+ {id:'t7',name:'部署与验收',day:7,duration:1,priority:'P2',status:'pending'}
+];
+const deps=[['t1','t2'],['t2','t3'],['t3','t4'],['t4','t5'],['t5','t6'],['t6','t7']];
+
+const $=s=>document.querySelector(s);
+function norm(t){
+ const day=Math.min(7,Math.max(1,Number(t.day)||1));
+ const duration=Math.min(7,Math.max(1,Number(t.duration)||1));
+ const safeDuration=Math.min(duration,8-day);
+ const p=['P0','P1','P2','P3'].includes(t.priority)?t.priority:'P2';
+ const st=['pending','in_progress','done'].includes(t.status)?t.status:'pending';
+ return {...t,day,duration:safeDuration,priority:p,status:st};
+}
+function load(){try{return (JSON.parse(localStorage.getItem(KEY))||defaultTasks).map(norm);}catch{return defaultTasks.map(norm)}}
+let tasks=load();
+function save(){localStorage.setItem(KEY,JSON.stringify(tasks));}
+function colorClass(p){return p.toLowerCase();}
+
+function renderKpi(){
+ const total=tasks.length,pending=tasks.filter(t=>t.status==='pending').length,
+ progress=tasks.filter(t=>t.status==='in_progress').length,done=tasks.filter(t=>t.status==='done').length;
+ $('#k-total').textContent=total;$('#k-pending').textContent=pending;$('#k-progress').textContent=progress;$('#k-done').textContent=done;
+}
+
+function renderTimeline(){
+ const axis=$('#axis');axis.innerHTML=D.map(d=>`<div>Day ${d}</div>`).join('');
+ const rows=$('#rows');
+ rows.innerHTML=tasks.map(t=>{
+   const cell=100/7;
+   const left=((t.day-1)*cell)+0.8;
+   let width=(t.duration*cell)-1.6;
+   if(t.duration===1) width=Math.max(width,18);
+   const pri=`<span class="${t.priority==='P0'?'p0t':t.priority==='P1'?'p1t':t.priority==='P2'?'p2t':'p3t'}">${t.priority}</span>`;
+   return `<div class="row"><span class="task-name">${t.name}</span><div class="bar ${colorClass(t.priority)}" style="left:${left}%;width:${width}%;"></div><span class="tag">${pri}</span></div>`;
+ }).join('');
+}
+
+function badge(t){
+ const st=t.status==='pending'?'待开始':t.status==='in_progress'?'进行中':'已完成';
+ return `<div class="item ${colorClass(t.priority)}"><div style="font-weight:700">${t.name}</div><div style="margin-top:4px;color:#6b7280">${t.priority} · Day${t.day} · ${t.duration}天 · ${st}</div></div>`;
+}
+function renderKanban(){
+ $('#kb-pending').innerHTML=tasks.filter(t=>t.status==='pending').map(badge).join('');
+ $('#kb-progress').innerHTML=tasks.filter(t=>t.status==='in_progress').map(badge).join('');
+ $('#kb-done').innerHTML=tasks.filter(t=>t.status==='done').map(badge).join('');
+}
+
+function renderTable(){
+ $('#tb').innerHTML=tasks.map(t=>`<tr>
+  <td>${t.name}</td>
+  <td><select class="s" data-id="${t.id}" data-f="status"><option value="pending" ${t.status==='pending'?'selected':''}>待开始</option><option value="in_progress" ${t.status==='in_progress'?'selected':''}>进行中</option><option value="done" ${t.status==='done'?'selected':''}>已完成</option></select></td>
+  <td><select class="d" data-id="${t.id}" data-f="day">${D.map(d=>`<option value="${d}" ${t.day===d?'selected':''}>Day ${d}</option>`).join('')}</select></td>
+  <td><select class="d" data-id="${t.id}" data-f="duration">${D.map(d=>`<option value="${d}" ${t.duration===d?'selected':''}>${d}天</option>`).join('')}</select></td>
+  <td><select class="p" data-id="${t.id}" data-f="priority"><option value="P0" ${t.priority==='P0'?'selected':''}>P0</option><option value="P1" ${t.priority==='P1'?'selected':''}>P1</option><option value="P2" ${t.priority==='P2'?'selected':''}>P2</option><option value="P3" ${t.priority==='P3'?'selected':''}>P3</option></select></td>
+  <td><button class="btn warn" data-del="${t.id}">删除</button></td>
+ </tr>`).join('');
+}
+
+function renderDep(){
+ const svg=$('#dep');
+ const w=svg.clientWidth,h=svg.clientHeight;
+ svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+ const grouped=D.map(day=>tasks.filter(t=>t.day===day));
+ const pos={};
+ let out='';
+ out+=`<defs><marker id="arr" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 9 3.5, 0 7" fill="#64748b"/></marker></defs>`;
+ grouped.forEach((arr,di)=>{
+   const x=(di+0.5)*w/7;
+   out+=`<line x1="${(di+1)*w/7}" y1="24" x2="${(di+1)*w/7}" y2="${h-10}" stroke="#eef2f7"/>`;
+   out+=`<text x="${x}" y="18" text-anchor="middle" fill="#64748b" font-size="12">Day ${di+1}</text>`;
+   arr.forEach((t,ri)=>{
+     const y=46+ri*52;
+     pos[t.id]={x,y};
+     const c=t.priority==='P0'?'#ef4444':t.priority==='P1'?'#f59e0b':t.priority==='P2'?'#3b82f6':'#10b981';
+     out+=`<rect x="${x-64}" y="${y-18}" rx="10" ry="10" width="128" height="34" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+     out+=`<text x="${x}" y="${y+3}" text-anchor="middle" fill="#1f2937" font-size="12">${t.name.slice(0,10)}</text>`;
+   });
+ });
+ deps.forEach(([a,b])=>{
+   if(!pos[a]||!pos[b]) return;
+   const p1=pos[a],p2=pos[b];
+   const dx=(p2.x-p1.x)*0.42;
+   out+=`<path d="M ${p1.x+64} ${p1.y} C ${p1.x+64+dx} ${p1.y}, ${p2.x-64-dx} ${p2.y}, ${p2.x-64} ${p2.y}" stroke="#64748b" stroke-width="3.4" fill="none" marker-end="url(#arr)"/>`;
+ });
+ svg.innerHTML=out;
+}
+
+function renderAll(){renderKpi();renderTimeline();renderKanban();renderTable();renderDep();}
+
+function bind(){
+ const daySel=$('#n-day'),durSel=$('#n-duration');
+ daySel.innerHTML=D.map(d=>`<option value="${d}">Day ${d}</option>`).join('');
+ durSel.innerHTML=D.map(d=>`<option value="${d}" ${d===1?'selected':''}>${d}天</option>`).join('');
+
+ document.addEventListener('change',e=>{
+  const el=e.target;
+  if(!(el instanceof HTMLSelectElement)) return;
+  const id=el.dataset.id,f=el.dataset.f;if(!id||!f) return;
+  const t=tasks.find(x=>x.id===id);if(!t) return;
+  t[f]=f==='day'||f==='duration'?Number(el.value):el.value;
+  Object.assign(t,norm(t));save();renderAll();
+ });
+
+ document.addEventListener('click',e=>{
+  const el=e.target;
+  if(!(el instanceof HTMLElement)) return;
+  const del=el.getAttribute('data-del');
+  if(del){tasks=tasks.filter(t=>t.id!==del);save();renderAll();}
+ });
+
+ $('#btn-add').addEventListener('click',()=>{
+  const name=$('#n-name').value.trim(); if(!name) return;
+  const t=norm({id:'t'+Date.now().toString(36),name,day:Number($('#n-day').value),duration:Number($('#n-duration').value),priority:$('#n-priority').value,status:$('#n-status').value});
+  tasks.push(t);save();$('#n-name').value='';renderAll();
+ });
+
+ $('#btn-reset').addEventListener('click',()=>{tasks=defaultTasks.map(norm);save();renderAll();});
+ window.addEventListener('resize',renderDep);
+}
+
+bind();renderAll();
+</script>
+</body>
+</html>
